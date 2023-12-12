@@ -95,7 +95,7 @@ class Maillage:
     def inverserNormales(self):
         for face in self.faces:
             # Inverser l'ordre des sommets
-            face.sommets = [face.sommets[2], face.sommets[0], face.sommets[1]]
+            face.sommets = [face.sommets[0], face.sommets[2], face.sommets[1]]
 
         print("Normales inversées !")
 
