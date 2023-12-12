@@ -3,11 +3,11 @@ from plyfile import PlyData, PlyElement
 import os
 
 # Import Sommet
-from sommet import Sommet
+from src.sommet import Sommet
 # Import Face
-from face import Face
+from src.face import Face
 # Import Vecteur3D
-from vecteur3D import Vecteur3D
+from src.vecteur3D import Vecteur3D
         
 class Maillage:
     def __init__(self, fichier_ply):
@@ -24,12 +24,6 @@ class Maillage:
         face = Face(s1, s2, s3)
         self.faces.append(face)
         return face
-    
-    def getSommets(self):
-        return self.sommets
-    
-    def getFaces(self):
-        return self.faces
     
     ### CONSTRUCTION MAILLAGE ###
     
@@ -89,6 +83,36 @@ class Maillage:
                 file.write("3 {} {} {}\n".format(int(f[0]), int(f[1]), int(f[2])))
             
         print("Maillage sauvegardé !")
+    
+    ### CALCUL DE LA SURFACE DU MAILLAGE ###
+    
+    def produit_vectoriel(self, vecteur1, vecteur2):
+        x = vecteur1.y * vecteur2.z - vecteur1.z * vecteur2.y
+        y = vecteur1.z * vecteur2.x - vecteur1.x * vecteur2.z
+        z = vecteur1.x * vecteur2.y - vecteur1.y * vecteur2.x
+        return Vecteur3D(x, y, z)
+    
+    def norme(self, vecteur):
+        return (vecteur.x**2 + vecteur.y**2 + vecteur.z**2)**0.5
+    
+    def calculerSurface(self):
+        surface = 0
+        
+        for face in self.faces:
+            # Calcul de la normale de la face
+            s1 = self.sommets[face.sommets[0]]
+            s2 = self.sommets[face.sommets[1]]
+            s3 = self.sommets[face.sommets[2]]
+            
+            vecteur1 = Vecteur3D(s2.x - s1.x, s2.y - s1.y, s2.z - s1.z)
+            vecteur2 = Vecteur3D(s3.x - s1.x, s3.y - s1.y, s3.z - s1.z)
+            
+            normale = vecteur1.produit_vectoriel(vecteur2)
+            
+            # Calcul de la surface de la face
+            surface += normale.norme() / 2
+            
+        return surface
     
     ### INVERSER NORMALES ###
     
@@ -160,84 +184,5 @@ class Maillage:
             sommet.x += bruit_x
             sommet.y += bruit_y
             sommet.z += bruit_z
-            
-        print("Maillage bruité !")
-
-### TESTS ###
-
-def testInversionNormales():
-    
-    maillage = Maillage("./src/assets/01_cube.ply")
-    print("Avant l'inversion des normales :")
-    print("Faces du maillage :")
-    for i, face in enumerate(maillage.faces):
-        print(f"Face {i + 1}: {face.sommets}")
-
-    maillage.inverserNormales()
-
-    print("\nAprès l'inversion des normales :")
-    print("Faces du maillage :")
-    for i, face in enumerate(maillage.faces):
-        print(f"Face {i + 1}: {face.sommets}")
-
-# print("Test d'inversion des normales :")
-# testInversionNormales()
-
-def testCentrageMaillage():
-    # test fait sur un fichier sans trop de sommets
-    maillage = Maillage("./src/assets/01_cube.ply")
-    print("Avant le centrage du maillage :")
-    print("Coordonnées des sommets :")
-    for sommet in maillage.sommets:
-        print(f"Sommet : ({sommet.x}, {sommet.y}, {sommet.z})")
-
-    maillage.centrerMaillage()
-
-    print("\nAprès le centrage du maillage :")
-    print("Coordonnées des sommets :")
-    for sommet in maillage.sommets:
-        print(f"Sommet : ({sommet.x}, {sommet.y}, {sommet.z})")
-
-# print("Test de centrage du maillage :")
-# testCentrageMaillage()
-
-def testHomothetieMaillage():
-
-    maillage = Maillage("./src/assets/01_cube.ply")
-    print("Avant l'homothétie :")
-    print("Coordonnées des sommets :")
-    for sommet in maillage.sommets:
-        print(f"Sommet : ({sommet.x}, {sommet.y}, {sommet.z})")
-
-    facteur_echelle = 10.0 
-    maillage.homothetie(facteur_echelle)
-
-    print("\nAprès l'homothétie :")
-    print("Coordonnées des sommets :")
-    for sommet in maillage.sommets:
-        print(f"Sommet : ({sommet.x}, {sommet.y}, {sommet.z})")
         
-    maillage.sauvegarderMaillage("homothetie.ply")        
-# print("Test d'homothétie du maillage :")
-testHomothetieMaillage()
-
-def testBruitageMaillage():
-
-    maillage = Maillage("./src/assets/03_moomoo.ply")
-    print("Avant le bruitage :")
-    print("Coordonnées des sommets :")
-    for sommet in maillage.sommets:
-        print(f"Sommet : ({sommet.x}, {sommet.y}, {sommet.z})")
-
-    coefficient_bruit = 5 
-    maillage.bruitage(coefficient_bruit)
-
-    print("\nAprès le bruitage :")
-    print("Coordonnées des sommets :")
-    for sommet in maillage.sommets:
-        print(f"Sommet : ({sommet.x}, {sommet.y}, {sommet.z})")
-        
-    maillage.sauvegarderMaillage("bruite.ply") 
-    
-# print("Test de bruitage du maillage :")
-# testBruitageMaillage()
+        print(f"Maillage bruité avec un coeff de {coefficient_bruit} !")
